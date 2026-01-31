@@ -1,0 +1,39 @@
+
+name: Build Mail Tracker EXE
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore .\OutlookMailReaderGraph\OutlookMailReaderGraph.csproj
+
+      - name: Publish self-contained EXE (win-x64)
+        run: dotnet publish .\OutlookMailReaderGraph\OutlookMailReaderGraph.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
+
+      - name: Copy appsettings.json into publish folder
+        run: Copy-Item .ppsettings.json .\OutlookMailReaderGraphin\Release
+et8.0\win-x64\publish\ -Force
+
+      - name: Package artifact (zip)
+        run: >
+          Compress-Archive
+          -Path .\OutlookMailReaderGraphin\Release
+et8.0\win-x64\publish\*
+          -DestinationPath .\OutlookMailTracker_win-x64.zip -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MailTracker_win-x64
+          path: OutlookMailTracker_win-x64.zip
