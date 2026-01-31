@@ -74,8 +74,8 @@ namespace OutlookMailReaderGraph
                 string excelPath = Path.Combine(root, "MailTracker.xlsx");
                 string attachDir = Path.Combine(root, "Attachments");
                 string statePath = Path.Combine(root, "state.json");
-                string attachDir = Path.Combine(root, "Attachments");
-                string statePath = Path.Combine(root, "state.json");
+                
+                // Make sure folders exist
                 Directory.CreateDirectory(root);
                 Directory.CreateDirectory(attachDir);
 
