@@ -120,10 +120,7 @@ namespace OutlookMailReaderGraph
 
                         if (m.HasAttachments == true)
                         {
-                            var atts = await graph.Me.Messages[m.Id].Attachments.GetAsync(a =>
-                            {
-                                a.QueryParameters.Top = 50;
-                            });
+                            var atts = await graph.Me.Messages[m.Id].Attachments.GetAsync();
 
                             if (atts?.Value != null)
                             {
