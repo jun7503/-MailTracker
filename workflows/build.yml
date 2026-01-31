@@ -1,11 +1,18 @@
 
 name: Build Mail Tracker EXE
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # run manually from the Actions tab
+  push:
+    branches: [ main, master ]  # optional: build on pushes too
 
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: Repo_Package_OptionC/OutlookMailReaderGraph
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -13,27 +20,36 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.x'  # LTS SDK on runner [3](https://rewiring.bearblog.dev/installing-net-sdks-without-admin-nor-script-access-on-windows/)
 
       - name: Restore
-        run: dotnet restore .\OutlookMailReaderGraph\OutlookMailReaderGraph.csproj
+        run: dotnet restore OutlookMailReaderGraph.csproj
+
+      - name: Build (Release)
+        run: dotnet build OutlookMailReaderGraph.csproj -c Release --no-restore
 
       - name: Publish self-contained EXE (win-x64)
-        run: dotnet publish .\OutlookMailReaderGraph\OutlookMailReaderGraph.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
+        run: >
+          dotnet publish OutlookMailReaderGraph.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:PublishSingleFile=true
+          /p:PublishTrimmed=false
+          /p:IncludeNativeLibrariesForSelfExtract=true
+          -o out\win-x64
+        # Single-file + self-contained is the supported way to ship a single EXE; keep trimming off
+        # for reflection-heavy libs like Graph/ClosedXML. [2](https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/language-compilers/deploy-aspnet-app-xcopy-command)
 
       - name: Copy appsettings.json into publish folder
-        run: Copy-Item .ppsettings.json .\OutlookMailReaderGraphin\Release
-et8.0\win-x64\publish\ -Force
+        run: Copy-Item -Path .\appsettings.json -Destination .\out\win-x64\ -Force
 
       - name: Package artifact (zip)
-        run: >
-          Compress-Archive
-          -Path .\OutlookMailReaderGraphin\Release
-et8.0\win-x64\publish\*
-          -DestinationPath .\OutlookMailTracker_win-x64.zip -Force
+        run: Compress-Archive -Path .\out\win-x64\* -DestinationPath .\OutlookMailTracker_win-x64.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: MailTracker_win-x64
-          path: OutlookMailTracker_win-x64.zip
+          path: Repo_Package_OptionC/OutlookMailReaderGraph/OutlookMailTracker_win-x64.zip
+          # upload-artifact action stores your built ZIP as a downloadable artifact. [4](https://learn.microsoft.com/en-us/entra/identity-platform/scenario-desktop-acquire-token-interactive)
