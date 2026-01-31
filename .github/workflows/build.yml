@@ -1,8 +1,8 @@
 name: Build Mail Tracker EXE
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # Run manually from Actions tab
   push:
-    branches: [ main ]
+    branches: [ main ]      # Optional: build automatically on pushes to main
 
 jobs:
   build:
@@ -24,10 +24,10 @@ jobs:
       - name: Restore
         run: dotnet restore OutlookMailReaderGraph.csproj
 
-      - name: Build Release
+      - name: Build (Release)
         run: dotnet build OutlookMailReaderGraph.csproj -c Release --no-restore
 
-      - name: Publish self-contained EXE
+      - name: Publish self-contained EXE (win-x64)
         run: >
           dotnet publish OutlookMailReaderGraph.csproj
           -c Release
@@ -38,13 +38,14 @@ jobs:
           /p:IncludeNativeLibrariesForSelfExtract=true
           -o out\win-x64
 
+      # IMPORTANT: appsettings.json is one folder up (../) from the working dir
       - name: Copy appsettings.json into publish folder
-        run: Copy-Item .\appsettings.json .\out\win-x64\ -Force
+        run: Copy-Item -Path ..\appsettings.json -Destination .\out\win-x64\ -Force
 
-      - name: Zip EXE
+      - name: Create ZIP for download
         run: Compress-Archive -Path .\out\win-x64\* -DestinationPath .\OutlookMailTracker_win-x64.zip -Force
 
-      - name: Upload artifact
+      - name: Upload artifact (ZIP)
         uses: actions/upload-artifact@v4
         with:
           name: MailTracker_win-x64
