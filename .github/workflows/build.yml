@@ -1,8 +1,8 @@
 name: Build Mail Tracker EXE
 on:
-  workflow_dispatch:        # Run manually from Actions tab
+  workflow_dispatch:
   push:
-    branches: [ main ]      # Optional: build automatically on pushes to main
+    branches: [ main ]
 
 jobs:
   build:
@@ -27,26 +27,15 @@ jobs:
       - name: Build (Release)
         run: dotnet build OutlookMailReaderGraph.csproj -c Release --no-restore
 
-      - name: Publish self-contained EXE (win-x64)
-        run: >
-          dotnet publish OutlookMailReaderGraph.csproj
-          -c Release
-          -r win-x64
-          --self-contained true
-          /p:PublishSingleFile=true
-          /p:PublishTrimmed=false
-          /p:IncludeNativeLibrariesForSelfExtract=true
-          -o out\win-x64
+      - name: Publish single-file, self-contained (win-x64)
+        run: dotnet publish OutlookMailReaderGraph.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:IncludeNativeLibrariesForSelfExtract=true -o out\win-x64
+        # Single-file + self-contained is the supported way to ship one EXE; trimming off avoids reflection breakage. [1](https://learn.microsoft.com/en-us/troubleshoot/developer/visualstudio/language-compilers/deploy-aspnet-app-xcopy-command)
 
-      # IMPORTANT: appsettings.json is one folder up (../) from the working dir
-      - name: Copy appsettings.json into publish folder
+      - name: Copy appsettings.json (one level up) into publish folder
         run: Copy-Item -Path ..\appsettings.json -Destination .\out\win-x64\ -Force
 
-      - name: Create ZIP for download
-        run: Compress-Archive -Path .\out\win-x64\* -DestinationPath .\OutlookMailTracker_win-x64.zip -Force
-
-      - name: Upload artifact (ZIP)
+      - name: Upload artifact (publish folder)
         uses: actions/upload-artifact@v4
         with:
           name: MailTracker_win-x64
-          path: Repo_Package_OptionC/OutlookMailReaderGraph/OutlookMailTracker_win-x64.zip
+          path: Repo_Package_OptionC/OutlookMailReaderGraph/out/win-x64/
