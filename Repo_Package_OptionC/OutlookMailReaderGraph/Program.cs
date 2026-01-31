@@ -63,8 +63,17 @@ namespace OutlookMailReaderGraph
                     return 1;
                 }
 
-                string root = DefaultRoot;
+                // Try to read OutputRoot from config; if missing/blank, fall back to DefaultRoot
+                var outputRoot = config["OutputRoot"];
+                string root = !string.IsNullOrWhiteSpace(outputRoot) ? outputRoot! : DefaultRoot;
+
+                // Ensure the directory exists
+                Directory.CreateDirectory(root);
+
+                // All outputs go under 'root'
                 string excelPath = Path.Combine(root, "MailTracker.xlsx");
+                string attachDir = Path.Combine(root, "Attachments");
+                string statePath = Path.Combine(root, "state.json");
                 string attachDir = Path.Combine(root, "Attachments");
                 string statePath = Path.Combine(root, "state.json");
                 Directory.CreateDirectory(root);
