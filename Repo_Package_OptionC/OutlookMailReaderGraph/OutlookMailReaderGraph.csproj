@@ -16,5 +16,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="ClosedXML" Version="0.102.2" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.21.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.*" />
   </ItemGroup>
 </Project>
